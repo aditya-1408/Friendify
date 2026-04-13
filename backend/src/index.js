@@ -1,0 +1,27 @@
+import express from "express"; // web framework for Node.js
+import dotenv from "dotenv"; // Load environment variables from .env file
+import authRoute from "./routes/auth.route.js"; // Import the authentication routes
+import { connectDB } from "./lib/db.js"; // Import the function to connect to the database
+
+dotenv.config(); // Load environment variables
+
+const app = express();
+app.use(express.json());
+
+app.use("/api/auth", authRoute); // Use the authRoute for handling authentication-related routes
+
+const PORT = process.env.PORT ?? 5001;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exitCode = 1;
+  }
+};
+
+startServer();
