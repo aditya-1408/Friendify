@@ -80,3 +80,7 @@ export const logout = (req, res) => {
     res.status(500).json({ message: "Server error" });
  }
 };
+
+export const updateProfilePic = async (req,res)=>{
+    
+}
