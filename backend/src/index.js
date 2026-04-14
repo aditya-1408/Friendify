@@ -18,10 +18,18 @@ const PORT = process.env.PORT ?? 5001;
 
 const startServer = async () => {
   try {
-    await connectDB();
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
+
+    try {
+      await connectDB();
+    } catch (error) {
+      console.error(
+        "MongoDB failed to connect; server will keep running:",
+        error?.message ?? error,
+      );
+    }
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exitCode = 1;

@@ -48,63 +48,68 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const {email,password}=req.body;
-  try{
-    const user = await User.findOne({email})
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
 
-    if(!user){
-        return res.status(400).json({message:"Invalid email or password"})
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
     }
-    const isPasswordMatch = await bcrypt.compare(password,user.password);
-    if(!isPasswordMatch){
-        return res.status(400).json({message:"Invalid email or password"})
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
     }
-    generateToken(user._id,res);
+    generateToken(user._id, res);
     res.status(200).json({
-        _id:user._id,
-        fullName:user.fullName,
-        email:user.email,
-        profilePic:user.profilePic
-    })
-  } catch(error){
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
     console.error("Error in login:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 export const logout = (req, res) => {
- try{
-    res.cookie("jwt","",{maxAge:0})
-    res.status(200).json({message:"Logged out successfully"})
- } catch(error){
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
     console.error("Error in logout:", error);
     res.status(500).json({ message: "Server error" });
- }
+  }
 };
 
-export const updateProfilePic = async (req,res)=>{
-    try{
-        const userId = req.user._id;
-        const {profilePic} = req.body;
-        if(!profilePic){
-            return res.status(400).json({message:"Profile picture URL is required"})
-        } 
-       const uploadResponse= await cloudinary.uploader.upload(profilePic)
-       //update in database
-       const updatedUser = await User.findByIdAndUpdate(userId,{profilePic:uploadResponse.secure_url},{new:true})
-         res.status(200).json(updatedUser)
-        
-    } catch(error){
-        console.error("Error in updateProfilePic:", error);
-        res.status(500).json({ message: "Server error" });
+export const updateProfilePic = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { profilePic } = req.body;
+    if (!profilePic) {
+      return res
+        .status(400)
+        .json({ message: "Profile picture URL is required" });
     }
-}
+    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    //update in database
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: uploadResponse.secure_url },
+      { new: true },
+    );
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error in updateProfilePic:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
-export const checkAuth =(req,res)=>{
-    try{
-        res.status(200).json(req.user);
-    } catch{
-        console.log("Error in checkAuth:", error);
-        res.status(500).json({ message: "Server error" });
-    }
-}
+export const checkAuth = (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Error in checkAuth:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
