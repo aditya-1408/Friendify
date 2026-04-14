@@ -1,44 +1,42 @@
-import express from "express"; // web framework for Node.js
-import dotenv from "dotenv"; // Load environment variables from .env file
-import authRoute from "./routes/auth.route.js"; // Import the authentication routes
-import messageRoute from "./routes/message.route.js"; // Import the message routes (assuming it's defined elsewhere)
-import { connectDB } from "./lib/db.js"; // Import the function to connect to the database
-import cookieParser from "cookie-parser"; // Middleware for parsing cookies
-import cors from "cors"; // Middleware for enabling CORS (Cross-Origin Resource Sharing)
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 
-dotenv.config(); // Load environment variables
+import path from "path";
 
-const app = express();
+import { connectDB } from "./lib/db.js";
+
+import authRoutes from "./routes/auth.route.js";
+import messageRoutes from "./routes/message.route.js";
+import { app, server } from "./lib/socket.js";
+
+dotenv.config();
+
+const PORT = process.env.PORT;
+const __dirname = path.resolve();
+
 app.use(express.json());
-app.use(cookieParser()); // Use cookie parser middleware to handle cookies
-app.use(cors({ // Enable CORS for the frontend application
-  origin: "http://localhost:5173", // Allow requests from this origin (frontend)
-  credentials: true, // Allow cookies to be sent in cross-origin requests
-}));
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 
-app.use("/api/auth", authRoute); // Use the authRoute for handling authentication-related routes
-app.use("/api/messages", messageRoute); // Use the messageRoute for handling message-related routes (assuming it's defined elsewhere)
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 
-const PORT = process.env.PORT ?? 5001;
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-const startServer = async () => {
-  try {
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+  });
+}
 
-    try {
-      await connectDB();
-    } catch (error) {
-      console.error(
-        "MongoDB failed to connect; server will keep running:",
-        error?.message ?? error,
-      );
-    }
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exitCode = 1;
-  }
-};
-
-startServer();
+server.listen(PORT, () => {
+  console.log("server is running on PORT:" + PORT);
+  connectDB();
+});
