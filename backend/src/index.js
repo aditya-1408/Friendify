@@ -3,6 +3,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -37,11 +38,24 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(repoRoot, "frontend", "dist")));
+const frontendDistDir = path.join(repoRoot, "frontend", "dist");
+const frontendIndexHtml = path.join(frontendDistDir, "index.html");
+const hasBuiltFrontend = fs.existsSync(frontendIndexHtml);
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(repoRoot, "frontend", "dist", "index.html"));
+console.log(
+  `[frontend] index.html ${hasBuiltFrontend ? "found" : "missing"} at ${frontendIndexHtml}`,
+);
+
+if (hasBuiltFrontend) {
+  app.use(express.static(frontendDistDir));
+
+  // Serve SPA for non-API GET routes.
+  app.get(/^\/((?!api).)*/, (req, res) => {
+    res.sendFile(frontendIndexHtml);
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.status(200).send("API is running");
   });
 }
 
