@@ -1,9 +1,10 @@
+import "./config/env.js";
 import express from "express";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import path from "path";
+import { fileURLToPath } from "url";
 
 import { connectDB } from "./lib/db.js";
 
@@ -11,10 +12,12 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
 
-dotenv.config();
-
 const PORT = process.env.PORT || 5001;
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const backendRoot = path.resolve(__dirname, "..");
+const repoRoot = path.resolve(backendRoot, "..");
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -35,10 +38,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  app.use(express.static(path.join(repoRoot, "frontend", "dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(repoRoot, "frontend", "dist", "index.html"));
   });
 }
 
